@@ -1,0 +1,3 @@
+#!/bin/sh
+# Always install
+exit 0

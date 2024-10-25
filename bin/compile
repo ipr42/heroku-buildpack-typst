@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+
+# Exit on error
+set -euo pipefail
+
+# Define directories provided by Heroku for the buildpack
+BUILD_DIR=$1
+CACHE_DIR=$2
+ENV_DIR=$3
+
+# Define paths for caching Rust installation
+CARGO_HOME="$CACHE_DIR/cargo"
+RUSTUP_HOME="$CACHE_DIR/rustup"
+
+# Ensure the cache directories exist
+mkdir -p "$CARGO_HOME" "$RUSTUP_HOME"
+
+# Install Rust (using rustup), with paths set to use the cache
+echo "-----> Installing Rust..."
+
+# Set environment variables for Rust to use the cache
+export CARGO_HOME
+export RUSTUP_HOME
+export PATH="$CARGO_HOME/bin:$PATH"
+
+# Install Rust if it’s not already cached
+if [ ! -x "$CARGO_HOME/bin/cargo" ]; then
+    echo "-----> Rust is not cached, downloading..."
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+else
+    echo "-----> Using cached Rust installation"
+fi
+
+# Verify installation
+rustup default stable
+rustup --version
+cargo --version
+
+# Install typst-cli using Cargo
+echo "-----> Installing typst-cli..."
+cargo install typst-cli --root "$CARGO_HOME" --locked
+
+# Ensure typst-cli is available to the app at runtime
+# Copy typst-cli binary to a directory that will persist on the Heroku slug
+mkdir -p "$BUILD_DIR/.heroku/bin"
+cp "$CARGO_HOME/bin/typst" "$BUILD_DIR/.heroku/bin"
+
+echo "-----> typst-cli installation complete."
+
+# Add typst to PATH at runtime
+mkdir -p "$BUILD_DIR/.profile.d"
+cat <<EOF >> "$BUILD_DIR/.profile.d/typst.sh"
+export PATH="\$PATH:/app/.heroku/bin"
+EOF
