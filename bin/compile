@@ -43,6 +43,7 @@ else
         if [ $AGE_DAYS -gt $CACHE_AGE_DAYS ]; then
             echo "-----> Cache is $AGE_DAYS days old (max: $CACHE_AGE_DAYS days), updating Rust..."
             rustup self update
+            rustup update stable
             date +%s > "$CACHE_TIMESTAMP_FILE"
         else
             echo "-----> Cache is $AGE_DAYS days old, using cached version"
@@ -50,6 +51,7 @@ else
     else
         echo "-----> No cache timestamp found, updating Rust..."
         rustup self update
+        rustup update stable
         date +%s > "$CACHE_TIMESTAMP_FILE"
     fi
 fi
