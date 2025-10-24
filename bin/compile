@@ -54,10 +54,8 @@ else
     fi
 fi
 
-# Install and set Rust version to 1.90
-echo "-----> Installing Rust 1.90..."
-rustup install 1.90
-rustup default 1.90
+# Ensure stable Rust is installed and set as default
+rustup default stable
 rustup --version
 cargo --version
 
