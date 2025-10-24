@@ -23,15 +23,38 @@ export CARGO_HOME
 export RUSTUP_HOME
 export PATH="$CARGO_HOME/bin:$PATH"
 
-# Install Rust if it’s not already cached
+# Install Rust if it's not already cached
+CACHE_AGE_DAYS=7
+CACHE_TIMESTAMP_FILE="$CARGO_HOME/.cache_timestamp"
+
 if [ ! -x "$CARGO_HOME/bin/cargo" ]; then
     echo "-----> Rust is not cached, downloading..."
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+    date +%s > "$CACHE_TIMESTAMP_FILE"
 else
     echo "-----> Using cached Rust installation"
+
+    # Check if cache is older than CACHE_AGE_DAYS
+    if [ -f "$CACHE_TIMESTAMP_FILE" ]; then
+        CACHE_TIME=$(cat "$CACHE_TIMESTAMP_FILE")
+        CURRENT_TIME=$(date +%s)
+        AGE_DAYS=$(( ($CURRENT_TIME - $CACHE_TIME) / 86400 ))
+
+        if [ $AGE_DAYS -gt $CACHE_AGE_DAYS ]; then
+            echo "-----> Cache is $AGE_DAYS days old (max: $CACHE_AGE_DAYS days), updating Rust..."
+            rustup self update
+            date +%s > "$CACHE_TIMESTAMP_FILE"
+        else
+            echo "-----> Cache is $AGE_DAYS days old, using cached version"
+        fi
+    else
+        echo "-----> No cache timestamp found, updating Rust..."
+        rustup self update
+        date +%s > "$CACHE_TIMESTAMP_FILE"
+    fi
 fi
 
-# Verify installation
+# Ensure stable Rust is installed and set as default
 rustup default stable
 rustup --version
 cargo --version
