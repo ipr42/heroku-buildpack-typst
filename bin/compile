@@ -38,7 +38,7 @@ cargo --version
 
 # Install typst-cli using Cargo
 echo "-----> Installing typst-cli..."
-cargo install typst-cli --root "$CARGO_HOME" --locked
+cargo install typst-cli --version 0.13.1 --root "$CARGO_HOME" --locked
 
 # Ensure typst-cli is available to the app at runtime
 # Copy typst-cli binary to a directory that will persist on the Heroku slug
